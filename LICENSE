@@ -1,21 +1,29 @@
-MIT License
 
-Copyright (c) 2026 faithfultechinnovations-sudo
+---
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+## Design Principles
+- **Automation-first**: If it can be automated, it should be
+- **Idempotent scripts**: Safe to re-run without side effects
+- **Least privilege**: Secure-by-default access patterns
+- **Documentation matters**: Scripts without context are liabilities
+- **Realism over perfection**: Designed to mirror real environments
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
+---
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+## Intended Audience
+- Hiring managers evaluating M365 / Identity / Automation engineers
+- MSPs and internal IT teams
+- Security and platform engineers
+- Anyone learning how Microsoft 365 is managed at scale
+
+---
+
+## Status
+This repository is actively developed as part of a structured 30–60–90 day Microsoft 365 automation plan.  
+Each commit represents intentional progress, not experimentation.
+
+---
+
+## Disclaimer
+All scripts are designed for **lab and educational use**.  
+Always review and test automation in a non-production environment before applying to real tenants.
