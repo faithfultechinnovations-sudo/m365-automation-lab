@@ -43,10 +43,11 @@ param(
   [switch]$DryRun,
 
   # Logging
-  [Parameter()]
-  [string]$LogDirectory = "logs",
+[Parameter()]
+[string]$LogDirectory = "logs",
 
-  # Output control
-  [Parameter()]
-  [switch]$RevealTempPassword
+# Output control
+[Parameter()]
+[switch]$RevealTempPassword
 )
+
