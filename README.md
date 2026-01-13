@@ -57,3 +57,8 @@ m365-automation-lab/
   - Group-based licensing
   - Security-first defaults
   - Logged and idempotent execution
+
+Successfully executed against a live Microsoft Entra ID tenant using delegated Microsoft Graph permissions
+
+User creation verified in Microsoft 365 admin center
+
