@@ -51,7 +51,7 @@ param(
   [string]$TempPassword,
 
   [Parameter()]
-  [bool]$ForceChangePasswordNextSignIn = $true,
+  [bool]$ForceChangePasswordNextSignIn = $true
 
   TempPassword      = if ($RevealTempPassword) { $TempPassword } else { $null }
 
@@ -232,4 +232,5 @@ catch {
 finally {
   Stop-Transcript | Out-Null
 }
+
 
