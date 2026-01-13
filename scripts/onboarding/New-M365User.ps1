@@ -53,6 +53,8 @@ param(
   [Parameter()]
   [bool]$ForceChangePasswordNextSignIn = $true,
 
+  TempPassword      = if ($RevealTempPassword) { $TempPassword } else { $null }
+
   # Group-based licensing / role groups
   [Parameter()]
   [string[]]$GroupObjectIds = @(),
@@ -60,6 +62,9 @@ param(
   # Safe execution
   [Parameter()]
   [switch]$DryRun,
+
+  [Parameter()]
+  [switch]$RevealTempPassword
 
   # Logging
   [Parameter()]
