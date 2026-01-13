@@ -1,4 +1,6 @@
-WHAT TO CARRY FROM ONBOARDING → OFFBOARDING (CLEAR SUMMARY)
+### “Suspend Access (Reversible)”
+
+### WHAT TO CARRY FROM ONBOARDING → OFFBOARDING (CLEAR SUMMARY)
 
 CORE PRINCIPLE
 Onboarding and offboarding are mirror processes.
