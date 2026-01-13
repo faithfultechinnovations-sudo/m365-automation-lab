@@ -1,80 +1,113 @@
-# User Offboarding Runbook
+WHAT TO CARRY FROM ONBOARDING → OFFBOARDING (CLEAR SUMMARY)
 
-## Purpose
+CORE PRINCIPLE
+Onboarding and offboarding are mirror processes.
 
-Safely offboard a Microsoft 365 user using Microsoft Graph with **repeatable, auditable, and idempotent** steps.
+Onboarding = grant identity and access
+Offboarding = revoke access while preserving identity
 
-This runbook immediately disables user access, revokes active sessions, and optionally removes group memberships — **without deleting the user object**.
+You do NOT copy scripts. You reuse structure, intent, and security posture.
 
-Designed for:
-- Security-first offboarding
-- Least-privilege Microsoft Graph access
-- Safe re-execution (idempotent)
-- Audit and compliance validation
+--------------------------------------------------
+WHAT SHOULD CARRY OVER
+--------------------------------------------------
 
----
+1) Runbook Structure (keep identical)
+- Purpose
+- What it does
+- What it does NOT do
+- Script reference
+- Prerequisites / permissions
+- Example usage
+- Expected output
+- Failure modes & troubleshooting
 
-## What This Runbook Does
+This consistency is correct and professional.
 
-✔ Disables the Entra ID user account  
-✔ Revokes all active sign-in sessions  
-✔ Optionally removes group memberships  
-✔ Writes a timestamped transcript for auditing  
+2) Security & Philosophy
+- Security-first
+- Least-privilege Graph access
+- Idempotent execution
+- Auditable transcripts
 
-## What This Runbook Does NOT Do
+These belong in BOTH runbooks.
 
-✖ Delete the user object  
-✖ Remove licenses directly  
-✖ Modify mailbox or OneDrive data  
-✖ Touch Intune-managed devices  
+3) Graph Access Model
+- Delegated Graph access
+- Explicit scopes listed
+- Operator role clarity (Global Admin / User Admin)
 
-> These actions are intentionally handled in later offboarding phases.
+Same model, different actions.
 
----
+4) Idempotency Mindset
+Onboarding example:
+- User already exists → skip creation
 
-## Script
+Offboarding equivalent:
+- User already disabled → no-op
+- Sessions already revoked → no-op
+- No groups → skip removal
 
-Primary script:
+Same behavior, reversed intent.
 
-- `scripts/offboarding/Disable-M365User.ps1`
+--------------------------------------------------
+WHAT SHOULD NOT BE COPIED
+--------------------------------------------------
 
----
+1) User creation details
+- Temp password generation
+- Password policy language
+- MailNickname logic
+- UsageLocation rationale
 
-## Example Usage
+These are onboarding-only concerns.
 
-> Run from the repository root (the folder containing `README.md`).
+2) Licensing philosophy text
+Onboarding:
+- Why group-based licensing is used
 
----
+Offboarding:
+- Only state that group removal MAY remove licenses
+(no philosophy, just effect)
 
-### 1) Dry run (no changes)
+3) Output fields that don’t apply
+Do NOT include in offboarding:
+- TempPassword
+- MailNickname
 
-```powershell
-.\scripts\offboarding\Disable-M365User.ps1 `
-  -UserPrincipalName "jane.doe@faithfultechinnovations.onmicrosoft.com" `
-  -DryRun
-'''
+Offboarding output should focus on:
+- AccountEnabled
+- SessionsRevoked
+- GroupsRemoved
 
-### 2) Live run (makes changes)
-```powershell
-   .\scripts\offboarding\Disable-M365User.ps1 `
- -UserPrincipalName "jane.doe@faithfultechinnovations.onmicrosoft.com"
-'''
+--------------------------------------------------
+WHAT ONBOARDING TAUGHT YOU TO ADD TO OFFBOARDING
+--------------------------------------------------
 
-### 3) Automation-friendly (no prompts)
+1) Explicit phase boundaries
+State clearly what is deferred:
+- License cleanup
+- Mailbox retention
+- OneDrive handling
+- Intune device actions
 
-'''powershell
-   .\scripts\offboarding\Disable-M365User.ps1 `
-  -UserPrincipalName "jane.doe@faithfultechinnovations.onmicrosoft.com" `
-  -Confirm:$false
-'''
+This enables clean Phase 2 work later.
 
-### Expected Output (Example)
+2) Failure modes & troubleshooting
+Mirror onboarding clarity:
+- 403 permission errors
+- Group removal failures
+- Already-disabled users
+- Wrong tenant / wrong context
 
-UserPrincipalName : jane.doe@faithfultechinnovations.onmicrosoft.com
-UserId            : 2c2c1669-9fa9-45f7-983b-1639f3604fcf
-AccountEnabled    : False
-SessionsRevoked   : True
-GroupsRemoved     : 0
-DryRun            : True
-TranscriptPath    : logs/offboarding-jane.doe_faithfultechinnovations.onmicrosoft.com-20260113-110157.log
-Timestamp         : 2026-01-13T11:02:27-06:00
+3) Automation-friendly execution
+-Confirm:$false support
+No prompts for HR / automation workflows.
+
+--------------------------------------------------
+ONE-SENTENCE TAKEAWAY
+--------------------------------------------------
+
+Reuse the structure, security posture, permissions clarity, idempotency mindset, and audit discipline from onboarding — but invert the intent from GRANT to REVOKE.
+
+You are aligned. You are not missing anything.
