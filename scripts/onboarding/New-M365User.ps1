@@ -1,4 +1,4 @@
-<# 
+<#
 .SYNOPSIS
 Creates a new Microsoft 365 user in Entra ID (Azure AD) and performs onboarding actions.
 
@@ -9,7 +9,7 @@ Automation-first onboarding using Microsoft Graph:
 - Checks for existing user (idempotency guard)
 - Creates user with a temporary password (optionally force change at next sign-in)
 - Adds user to specified groups (preferred: group-based licensing)
-- Optionally sets usageLocation (needed for license assignment in many tenants)
+- Sets usageLocation (often required for licensing)
 - Writes structured output and logs a transcript
 
 .NOTES
@@ -63,7 +63,11 @@ param(
 
   # Logging
   [Parameter()]
-  [string]$LogDirectory = "logs"
+  [string]$LogDirectory = "logs",
+
+  # Output control
+  [Parameter()]
+  [switch]$RevealTempPassword
 )
 
 Set-StrictMode -Version Latest
@@ -84,18 +88,15 @@ function New-StrongTempPassword {
 }
 
 function Connect-GraphIfNeeded {
-  # Require Microsoft Graph module
   if (-not (Get-Module -ListAvailable -Name Microsoft.Graph)) {
     throw "Microsoft.Graph PowerShell SDK not found. Install with: Install-Module Microsoft.Graph -Scope CurrentUser"
   }
 
-  # Scopes: create users, read users, update users, manage group membership
   $scopes = @(
     "User.ReadWrite.All",
     "Group.ReadWrite.All"
   )
 
-  # Connect only if not already connected
   $ctx = Get-MgContext -ErrorAction SilentlyContinue
   if (-not $ctx) {
     Write-Host "Connecting to Microsoft Graph..." -ForegroundColor Cyan
@@ -105,7 +106,7 @@ function Connect-GraphIfNeeded {
 
 function Get-UserByUpn {
   param([Parameter(Mandatory)][string]$Upn)
-  # Try direct by UPN (works in many tenants). Fallback to filter.
+
   try {
     return Get-MgUser -UserId $Upn -ErrorAction Stop
   } catch {
@@ -124,7 +125,6 @@ Start-Transcript -Path $transcriptPath -Append | Out-Null
 
 try {
   if (-not $MailNickname -or [string]::IsNullOrWhiteSpace($MailNickname)) {
-    # Default mailNickname: left side of UPN, cleaned
     $MailNickname = ($UserPrincipalName.Split('@')[0]) -replace '[^a-zA-Z0-9._-]', ''
   }
 
@@ -132,11 +132,13 @@ try {
     $TempPassword = New-StrongTempPassword
   }
 
-  Write-Host "---- M365 Onboarding شروع (Onboarding Start) ----" -ForegroundColor Cyan
+  Write-Host "---- M365 Onboarding (Start) ----" -ForegroundColor Cyan
   Write-Host "UPN: $UserPrincipalName"
   Write-Host "DisplayName: $DisplayName"
   Write-Host "UsageLocation: $UsageLocation"
   Write-Host "Groups to add: $($GroupObjectIds.Count)"
+
+  $userId = $null
 
   if ($DryRun) {
     Write-Host "[DryRun] No changes will be made." -ForegroundColor Yellow
@@ -144,7 +146,7 @@ try {
     Connect-GraphIfNeeded
   }
 
-  # Idempotency guard: check if user already exists
+  # Idempotency guard
   $existing = $null
   if (-not $DryRun) {
     $existing = Get-UserByUpn -Upn $UserPrincipalName
@@ -155,14 +157,14 @@ try {
     $userId = $existing.Id
   } else {
     $createBody = @{
-      accountEnabled = $true
-      displayName    = $DisplayName
-      mailNickname   = $MailNickname
+      accountEnabled    = $true
+      displayName       = $DisplayName
+      mailNickname      = $MailNickname
       userPrincipalName = $UserPrincipalName
-      givenName      = $GivenName
-      surname        = $Surname
-      usageLocation  = $UsageLocation
-      passwordProfile = @{
+      givenName         = $GivenName
+      surname           = $Surname
+      usageLocation     = $UsageLocation
+      passwordProfile   = @{
         password = $TempPassword
         forceChangePasswordNextSignIn = $ForceChangePasswordNextSignIn
       }
@@ -182,7 +184,7 @@ try {
     }
   }
 
-  # Add to groups (recommended approach for licensing)
+  # Group membership (preferred: group-based licensing)
   foreach ($gid in $GroupObjectIds) {
     if ([string]::IsNullOrWhiteSpace($gid)) { continue }
 
@@ -190,7 +192,6 @@ try {
       if ($DryRun) {
         Write-Host "[DryRun] Would add user to group: $gid" -ForegroundColor Yellow
       } else {
-        # Add user as group member
         New-MgGroupMemberByRef -GroupId $gid -BodyParameter @{
           "@odata.id" = "https://graph.microsoft.com/v1.0/directoryObjects/$userId"
         } | Out-Null
@@ -200,7 +201,7 @@ try {
     }
   }
 
-  # Output (structured)
+  # Output object
   $result = [pscustomobject]@{
     UserPrincipalName = $UserPrincipalName
     DisplayName       = $DisplayName
@@ -208,16 +209,20 @@ try {
     UsageLocation     = $UsageLocation
     MailNickname      = $MailNickname
     GroupsAdded       = $GroupObjectIds
-    TempPassword      = $TempPassword
+    TempPassword      = if ($RevealTempPassword) { $TempPassword } else { $null }
     DryRun            = [bool]$DryRun
     TranscriptPath    = $transcriptPath
     Timestamp         = (Get-Date).ToString("o")
   }
 
+  if ($DryRun) {
+    Write-Host "[DryRun] Onboarding simulation completed." -ForegroundColor Yellow
+  }
+
   Write-Host "---- Completed ----" -ForegroundColor Green
   $result | Format-List | Out-String | Write-Host
 
-  # Also return object to pipeline
+  # Return to pipeline
   $result
 }
 catch {
@@ -227,4 +232,3 @@ catch {
 finally {
   Stop-Transcript | Out-Null
 }
-
