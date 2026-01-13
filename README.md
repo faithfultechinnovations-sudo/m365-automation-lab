@@ -41,4 +41,19 @@ This is not a collection of scripts — it is a **structured automation lab** wi
 ---
 
 ## Repository Structure
+m365-automation-lab/
+├─ .gitignore
+├─ LICENSE
+├─ README.md
+├─ scripts/
+  ├─ onboarding
+├─ modules/
+├─ runbooks/
+└─ docs/
 
+## Implemented Automations
+- Automated Microsoft 365 user onboarding
+  - Identity creation via Microsoft Graph
+  - Group-based licensing
+  - Security-first defaults
+  - Logged and idempotent execution
