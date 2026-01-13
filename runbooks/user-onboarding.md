@@ -38,22 +38,29 @@ Primary script:
 
 - `scripts/onboarding/New-M365User.ps1`
 
-
+---
 
 ## Prerequisites
 
 - PowerShell 7 recommended (Windows PowerShell 5.1 supported)
 - Microsoft Graph PowerShell SDK installed:
-  ```powershell
-  Install-Module Microsoft.Graph -Scope CurrentUser
+
+```powershell
+Install-Module Microsoft.Graph -Scope CurrentUser
 ```
 
-### Example Usage
-   Run from the repository root (the folder containing README.md)
+---
 
-1) Dry run (no changes)
+## Example Usage
+
+> Run from the repository root (the folder containing `README.md`).
+
+---
+
+### 1) Dry run (no changes)
+
 ```powershell
-  .\scripts\onboarding\New-M365User.ps1 `
+.\scripts\onboarding\New-M365User.ps1 `
   -UserPrincipalName "jane.doe@faithfultechinnovations.onmicrosoft.com" `
   -DisplayName "Jane Doe" `
   -GivenName "Jane" `
@@ -61,7 +68,9 @@ Primary script:
   -UsageLocation "US" `
   -DryRun
 ```
-2) Live run (creates the user)
+
+### 2) Live run (creates the user)
+
 ```powershell
 .\scripts\onboarding\New-M365User.ps1 `
   -UserPrincipalName "jane.doe@faithfultechinnovations.onmicrosoft.com" `
@@ -71,7 +80,8 @@ Primary script:
   -UsageLocation "US"
 ```
 
-3) Onboarding with group-based licensing
+### 3) Onboarding with group-based licensing
+
 ```powershell
 .\scripts\onboarding\New-M365User.ps1 `
   -UserPrincipalName "jane.doe@faithfultechinnovations.onmicrosoft.com" `
@@ -85,7 +95,8 @@ Primary script:
   )
 ```
 
-4) Automation-friendly (no prompts)
+### 4) Automation-friendly (no prompts)
+
 ```powershell
 .\scripts\onboarding\New-M365User.ps1 `
   -UserPrincipalName "jane.doe@faithfultechinnovations.onmicrosoft.com" `
@@ -96,7 +107,11 @@ Primary script:
   -Confirm:$false
 ```
 
-Expected Output (Example)
+---
+
+## Expected Output (Example)
+
+```text
 UserPrincipalName : jane.doe@faithfultechinnovations.onmicrosoft.com
 DisplayName       : Jane Doe
 UserId            : 2c2c1669-9fa9-45f7-983b-1639f3604fcf
@@ -107,3 +122,4 @@ TempPassword      : ********
 DryRun            : False
 TranscriptPath    : logs/onboarding-jane.doe_faithfultechinnovations.onmicrosoft.com-20260113-102509.log
 Timestamp         : 2026-01-13T10:25:22-06:00
+```
