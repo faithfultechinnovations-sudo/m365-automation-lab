@@ -15,6 +15,7 @@ logs/
 exports/
 *.log
 *.csv
+*.zip
 
 # VS Code
 .vscode/
@@ -22,6 +23,3 @@ exports/
 # OS files
 .DS_Store
 Thumbs.db
-
-# Zip Code
-*.zip
