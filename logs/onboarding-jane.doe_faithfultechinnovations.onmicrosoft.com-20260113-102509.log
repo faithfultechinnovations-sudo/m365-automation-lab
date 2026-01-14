@@ -1,0 +1,73 @@
+﻿**********************
+Windows PowerShell transcript start
+Start time: 20260113102509
+Username: DESKTOP-1V5F1F4\Joe
+RunAs User: DESKTOP-1V5F1F4\Joe
+Configuration Name: 
+Machine: DESKTOP-1V5F1F4 (Microsoft Windows NT 10.0.26200.0)
+Host Application: C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe
+Process ID: 3692
+PSVersion: 5.1.26100.7462
+PSEdition: Desktop
+PSCompatibleVersions: 1.0, 2.0, 3.0, 4.0, 5.0, 5.1.26100.7462
+BuildVersion: 10.0.26100.7462
+CLRVersion: 4.0.30319.42000
+WSManStackVersion: 3.0
+PSRemotingProtocolVersion: 2.3
+SerializationVersion: 1.1.0.1
+**********************
+---- M365 Onboarding (Start) ----
+UPN: jane.doe@faithfultechinnovations.onmicrosoft.com
+DisplayName: Jane Doe
+UsageLocation: US
+Groups to add: 0
+Connecting to Microsoft Graph...
+WARNING: Note: Sign in by Web Account Manager (WAM) is enabled by default on Windows. If using an embedded terminal, the interactive browser window may be hidden behind other windows.
+PS>TerminatingError(Get-MgUser_Get): "The running command stopped because the preference variable "ErrorActionPreference" or common parameter is set to Stop: Resource 'jane.doe@faithfultechinnovations.onmicrosoft.com' does not exist or one of its queried reference-property objects are not present.
+
+Status: 404 (NotFound)
+ErrorCode: Request_ResourceNotFound
+Date: 2026-01-13T16:25:17
+
+Headers:
+Transfer-Encoding             : chunked
+Vary                          : Accept-Encoding
+Strict-Transport-Security     : max-age=31536000
+request-id                    : 42580e01-9a31-4740-ae5c-a347691b3835
+client-request-id             : 8dda291d-5d1a-459b-90ca-ce31ed47f3a3
+x-ms-ags-diagnostic           : {"ServerInfo":{"DataCenter":"Central US","Slice":"E","Ring":"4","ScaleUnit":"000","RoleInstance":"DS1PEPF0003CC77"}}
+x-ms-resource-unit            : 1
+Cache-Control                 : no-cache
+Date                          : Tue, 13 Jan 2026 16:25:16 GMT
+
+"
+Creating user in Entra ID...
+Created user: 2c2c1669-9fa9-45f7-983b-1639f3604fcf
+---- Completed ----
+
+
+UserPrincipalName : jane.doe@faithfultechinnovations.onmicrosoft.com
+DisplayName       : Jane Doe
+UserId            : 2c2c1669-9fa9-45f7-983b-1639f3604fcf
+UsageLocation     : US
+MailNickname      : jane.doe
+GroupsAdded       : {}
+TempPassword      : 
+DryRun            : False
+TranscriptPath    : logs\onboarding-jane.doe_faithfultechinnovations.onmicrosoft.com-20260113-102509.log
+Timestamp         : 2026-01-13T10:25:22.0625605-06:00
+UserPrincipalName : jane.doe@faithfultechinnovations.onmicrosoft.com
+DisplayName       : Jane Doe
+UserId            : 2c2c1669-9fa9-45f7-983b-1639f3604fcf
+UsageLocation     : US
+MailNickname      : jane.doe
+GroupsAdded       : {}
+TempPassword      :
+DryRun            : False
+TranscriptPath    : logs\onboarding-jane.doe_faithfultechinnovations.onmicrosoft.com-20260113-102509.log
+Timestamp         : 2026-01-13T10:25:22.0625605-06:00
+
+**********************
+Windows PowerShell transcript end
+End time: 20260113102522
+**********************

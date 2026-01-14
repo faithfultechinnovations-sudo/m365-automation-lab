@@ -1,0 +1,93 @@
+﻿**********************
+Windows PowerShell transcript start
+Start time: 20260112210021
+Username: DESKTOP-1V5F1F4\Joe
+RunAs User: DESKTOP-1V5F1F4\Joe
+Configuration Name: 
+Machine: DESKTOP-1V5F1F4 (Microsoft Windows NT 10.0.26200.0)
+Host Application: C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe
+Process ID: 23272
+PSVersion: 5.1.26100.7462
+PSEdition: Desktop
+PSCompatibleVersions: 1.0, 2.0, 3.0, 4.0, 5.0, 5.1.26100.7462
+BuildVersion: 10.0.26100.7462
+CLRVersion: 4.0.30319.42000
+WSManStackVersion: 3.0
+PSRemotingProtocolVersion: 2.3
+SerializationVersion: 1.1.0.1
+**********************
+---- M365 Onboarding (Start) ----
+UPN: jane.doe@faithfultechinnovations.onmicrosoft.com
+DisplayName: Jane Doe
+UsageLocation: US
+Groups to add: 0
+Connecting to Microsoft Graph...
+WARNING: Note: Sign in by Web Account Manager (WAM) is enabled by default on Windows. If using an embedded terminal, the interactive browser window may be hidden behind other windows.
+PS>TerminatingError(Get-MgUser_Get): "The running command stopped because the preference variable "ErrorActionPreference" or common parameter is set to Stop: 
+
+Status: 403 (Forbidden)
+ErrorCode: UnknownError
+Date: 2026-01-13T03:02:16
+
+Headers:
+Transfer-Encoding             : chunked
+Vary                          : Accept-Encoding
+Strict-Transport-Security     : max-age=31536000
+request-id                    : ee5185e5-c16b-492d-9bf1-b66644433187
+client-request-id             : e731cc8c-3e51-42da-ab89-0f4818b7369b
+x-ms-ags-diagnostic           : {"ServerInfo":{"DataCenter":"Central US","Slice":"E","Ring":"4","ScaleUnit":"000","RoleInstance":"DS1PEPF0000203A"}}
+Date                          : Tue, 13 Jan 2026 03:02:15 GMT
+
+"
+Creating user in Entra ID...
+New-MgUser : 
+
+Status: 405 (MethodNotAllowed)
+ErrorCode: UnknownError
+Date: 2026-01-13T03:02:17
+
+Headers:
+Transfer-Encoding             : chunked
+Vary                          : Accept-Encoding
+Strict-Transport-Security     : max-age=31536000
+request-id                    : 1ddddddb-ef02-4b8f-8b27-9ac4a761d99c
+client-request-id             : 488e7026-a50a-42be-9558-d4f9817b19ed
+x-ms-ags-diagnostic           : {"ServerInfo":{"DataCenter":"Central 
+US","Slice":"E","Ring":"4","ScaleUnit":"000","RoleInstance":"DS1PEPF0003633D"}}
+Date                          : Tue, 13 Jan 2026 03:02:16 GMT
+
+
+At C:\Users\Joe\Documents\GitHub\m365-automation-lab\scripts\onboarding\New-M365User.ps1:180 char:9
++         $newUser = New-MgUser -BodyParameter $createBody
++         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : InvalidOperation: ({ Headers = , b...softGraphUser }:<>f__AnonymousType53`2) 
+[New-MgUser_Create], Exception
+    + FullyQualifiedErrorId : UnknownError,Microsoft.Graph.PowerShell.Cmdlets.NewMgUser_Create
+New-MgUser :
+
+Status: 405 (MethodNotAllowed)
+ErrorCode: UnknownError
+Date: 2026-01-13T03:02:17
+
+Headers:
+Transfer-Encoding             : chunked
+Vary                          : Accept-Encoding
+Strict-Transport-Security     : max-age=31536000
+request-id                    : 1ddddddb-ef02-4b8f-8b27-9ac4a761d99c
+client-request-id             : 488e7026-a50a-42be-9558-d4f9817b19ed
+x-ms-ags-diagnostic           : {"ServerInfo":{"DataCenter":"Central
+US","Slice":"E","Ring":"4","ScaleUnit":"000","RoleInstance":"DS1PEPF0003633D"}}
+Date                          : Tue, 13 Jan 2026 03:02:16 GMT
+
+
+At C:\Users\Joe\Documents\GitHub\m365-automation-lab\scripts\onboarding\New-M365User.ps1:180 char:9
++         $newUser = New-MgUser -BodyParameter $createBody
++         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : InvalidOperation: ({ Headers = , b...softGraphUser }:<>f__AnonymousType53`2) [New-MgUser
+   _Create], Exception
+    + FullyQualifiedErrorId : UnknownError,Microsoft.Graph.PowerShell.Cmdlets.NewMgUser_Create
+ERROR: The property 'Id' cannot be found on this object. Verify that the property exists.
+**********************
+Windows PowerShell transcript end
+End time: 20260112210220
+**********************

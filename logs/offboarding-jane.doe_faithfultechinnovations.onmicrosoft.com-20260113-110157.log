@@ -1,0 +1,58 @@
+﻿**********************
+Windows PowerShell transcript start
+Start time: 20260113110157
+Username: DESKTOP-1V5F1F4\Joe
+RunAs User: DESKTOP-1V5F1F4\Joe
+Configuration Name: 
+Machine: DESKTOP-1V5F1F4 (Microsoft Windows NT 10.0.26200.0)
+Host Application: C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe
+Process ID: 3692
+PSVersion: 5.1.26100.7462
+PSEdition: Desktop
+PSCompatibleVersions: 1.0, 2.0, 3.0, 4.0, 5.0, 5.1.26100.7462
+BuildVersion: 10.0.26100.7462
+CLRVersion: 4.0.30319.42000
+WSManStackVersion: 3.0
+PSRemotingProtocolVersion: 2.3
+SerializationVersion: 1.1.0.1
+**********************
+---- M365 Offboarding (Start) ----
+User: jane.doe@faithfultechinnovations.onmicrosoft.com
+Confirm
+Are you sure you want to perform this action?
+Performing the operation "Disable account" on target "jane.doe@faithfultechinnovations.onmicrosoft.com".
+&Yes  Yes to &All  &No  No to A&ll  &Suspend
+Y
+[DryRun] Would disable account
+Confirm
+Are you sure you want to perform this action?
+Performing the operation "Revoke sign-in sessions" on target "jane.doe@faithfultechinnovations.onmicrosoft.com".
+&Yes  Yes to &All  &No  No to A&ll  &Suspend
+Y
+[DryRun] Would revoke sessions
+---- Completed ----
+
+
+UserPrincipalName : jane.doe@faithfultechinnovations.onmicrosoft.com
+UserId            : 2c2c1669-9fa9-45f7-983b-1639f3604fcf
+AccountEnabled    : False
+SessionsRevoked   : True
+GroupsRemoved     : 0
+DryRun            : True
+TranscriptPath    : logs\offboarding-jane.doe_faithfultechinnovations.onmicrosoft.com-20260113-110157.log
+Timestamp         : 2026-01-13T11:02:27.4591214-06:00
+
+
+UserPrincipalName : jane.doe@faithfultechinnovations.onmicrosoft.com
+UserId            : 2c2c1669-9fa9-45f7-983b-1639f3604fcf
+AccountEnabled    : False
+SessionsRevoked   : True
+GroupsRemoved     : 0
+DryRun            : True
+TranscriptPath    : logs\offboarding-jane.doe_faithfultechinnovations.onmicrosoft.com-20260113-110157.log
+Timestamp         : 2026-01-13T11:02:27.4591214-06:00
+
+**********************
+Windows PowerShell transcript end
+End time: 20260113110227
+**********************

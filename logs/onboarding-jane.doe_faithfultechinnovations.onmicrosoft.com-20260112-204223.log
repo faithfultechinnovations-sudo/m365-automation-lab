@@ -1,0 +1,56 @@
+﻿**********************
+Windows PowerShell transcript start
+Start time: 20260112204223
+Username: DESKTOP-1V5F1F4\Joe
+RunAs User: DESKTOP-1V5F1F4\Joe
+Configuration Name: 
+Machine: DESKTOP-1V5F1F4 (Microsoft Windows NT 10.0.26200.0)
+Host Application: C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe
+Process ID: 10780
+PSVersion: 5.1.26100.7462
+PSEdition: Desktop
+PSCompatibleVersions: 1.0, 2.0, 3.0, 4.0, 5.0, 5.1.26100.7462
+BuildVersion: 10.0.26100.7462
+CLRVersion: 4.0.30319.42000
+WSManStackVersion: 3.0
+PSRemotingProtocolVersion: 2.3
+SerializationVersion: 1.1.0.1
+**********************
+---- M365 Onboarding (Start) ----
+UPN: jane.doe@faithfultechinnovations.onmicrosoft.com
+DisplayName: Jane Doe
+UsageLocation: US
+Groups to add: 0
+[DryRun] No changes will be made.
+[DryRun] Would create user with body:
+{
+    "mailNickname":  "jane.doe",
+    "surname":  "Doe",
+    "userPrincipalName":  "jane.doe@faithfultechinnovations.onmicrosoft.com",
+    "displayName":  "Jane Doe",
+    "givenName":  "Jane",
+    "passwordProfile":  {
+                            "password":  "z7hy7VMHhAqQHgne",
+                            "forceChangePasswordNextSignIn":  true
+                        },
+    "accountEnabled":  true,
+    "usageLocation":  "US"
+}
+[DryRun] Onboarding simulation completed.
+---- Completed ----
+
+
+UserPrincipalName : jane.doe@faithfultechinnovations.onmicrosoft.com
+DisplayName       : Jane Doe
+UserId            : DRYRUN-USER
+UsageLocation     : US
+MailNickname      : jane.doe
+GroupsAdded       : {}
+TempPassword      : 
+DryRun            : True
+TranscriptPath    : logs\onboarding-jane.doe_faithfultechinnovations.onmicrosoft.com-20260112-204223.log
+Timestamp         : 2026-01-12T20:42:23.9450414-06:00
+**********************
+Windows PowerShell transcript end
+End time: 20260112204223
+**********************

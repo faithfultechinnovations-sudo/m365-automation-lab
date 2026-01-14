@@ -1,0 +1,90 @@
+﻿**********************
+Windows PowerShell transcript start
+Start time: 20260113100724
+Username: DESKTOP-1V5F1F4\Joe
+RunAs User: DESKTOP-1V5F1F4\Joe
+Configuration Name: 
+Machine: DESKTOP-1V5F1F4 (Microsoft Windows NT 10.0.26200.0)
+Host Application: C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe
+Process ID: 3692
+PSVersion: 5.1.26100.7462
+PSEdition: Desktop
+PSCompatibleVersions: 1.0, 2.0, 3.0, 4.0, 5.0, 5.1.26100.7462
+BuildVersion: 10.0.26100.7462
+CLRVersion: 4.0.30319.42000
+WSManStackVersion: 3.0
+PSRemotingProtocolVersion: 2.3
+SerializationVersion: 1.1.0.1
+**********************
+---- M365 Onboarding (Start) ----
+UPN: jane.doe@faithfultechinnovations.onmicrosoft.com
+DisplayName: Jane Doe
+UsageLocation: US
+Groups to add: 0
+Connecting to Microsoft Graph...
+PS>TerminatingError(Get-MgUser_Get): "The running command stopped because the preference variable "ErrorActionPreference" or common parameter is set to Stop: 
+
+Status: 403 (Forbidden)
+ErrorCode: UnknownError
+Date: 2026-01-13T16:07:26
+
+Headers:
+Transfer-Encoding             : chunked
+Vary                          : Accept-Encoding
+Strict-Transport-Security     : max-age=31536000
+request-id                    : ae4e12c1-02f5-4fab-b790-9f5e7ca74bb3
+client-request-id             : 72219470-7f9d-4b5b-baa0-1f3693a449cf
+x-ms-ags-diagnostic           : {"ServerInfo":{"DataCenter":"Central US","Slice":"E","Ring":"4","ScaleUnit":"005","RoleInstance":"DS3PEPF00008F9E"}}
+Date                          : Tue, 13 Jan 2026 16:07:26 GMT
+
+"
+Creating user in Entra ID...
+New-MgUser : 
+
+Status: 405 (MethodNotAllowed)
+ErrorCode: UnknownError
+Date: 2026-01-13T16:07:27
+
+Headers:
+Transfer-Encoding             : chunked
+Vary                          : Accept-Encoding
+Strict-Transport-Security     : max-age=31536000
+request-id                    : bae017a5-81ea-40e6-b26d-c240ece83b51
+client-request-id             : dec104f7-c9fb-4e3d-a599-f2dcc3dd4227
+x-ms-ags-diagnostic           : {"ServerInfo":{"DataCenter":"Central 
+US","Slice":"E","Ring":"4","ScaleUnit":"005","RoleInstance":"DS3PEPF00016A60"}}
+Date                          : Tue, 13 Jan 2026 16:07:27 GMT
+
+
+At C:\Users\Joe\Documents\GitHub\m365-automation-lab\scripts\onboarding\New-M365User.ps1:180 char:9
++         $newUser = New-MgUser -BodyParameter $createBody
++         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : InvalidOperation: ({ Headers = , b...softGraphUser }:<>f__AnonymousType53`2) 
+[New-MgUser_Create], Exception
+    + FullyQualifiedErrorId : UnknownError,Microsoft.Graph.PowerShell.Cmdlets.NewMgUser_Create
+New-MgUser :
+
+Status: 405 (MethodNotAllowed)
+ErrorCode: UnknownError
+Date: 2026-01-13T16:07:27
+
+Headers:
+Transfer-Encoding             : chunked
+Vary                          : Accept-Encoding
+Strict-Transport-Security     : max-age=31536000
+request-id                    : bae017a5-81ea-40e6-b26d-c240ece83b51
+client-request-id             : dec104f7-c9fb-4e3d-a599-f2dcc3dd4227
+x-ms-ags-diagnostic           : {"ServerInfo":{"DataCenter":"Central US","Slice":"E","Ring":"4","ScaleUnit":"005","RoleInstance":"DS3PEPF00016A60"}}
+Date                          : Tue, 13 Jan 2026 16:07:27 GMT
+
+
+At C:\Users\Joe\Documents\GitHub\m365-automation-lab\scripts\onboarding\New-M365User.ps1:180 char:9
++         $newUser = New-MgUser -BodyParameter $createBody
++         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : InvalidOperation: ({ Headers = , b...softGraphUser }:<>f__AnonymousType53`2) [New-MgUser_Create], Exception
+    + FullyQualifiedErrorId : UnknownError,Microsoft.Graph.PowerShell.Cmdlets.NewMgUser_Create
+ERROR: The property 'Id' cannot be found on this object. Verify that the property exists.
+**********************
+Windows PowerShell transcript end
+End time: 20260113100731
+**********************
