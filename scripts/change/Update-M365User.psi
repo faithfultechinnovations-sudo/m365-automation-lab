@@ -1,0 +1,263 @@
+<#
+.SYNOPSIS
+Updates an existing Microsoft 365 (Entra ID) user profile and/or group memberships using Microsoft Graph.
+
+.DESCRIPTION
+Automation-first "day-2" change script:
+- Connects to Microsoft Graph with least-privilege delegated scopes
+- Resolves the user by UPN (idempotent guard)
+- Updates only the fields you specify (does not overwrite unspecified fields)
+- Optionally sets manager
+- Optionally adds/removes group memberships (recommended for access + licensing)
+- Writes structured output and a transcript log for auditing
+
+.NOTES
+- Designed for lab/educational use. Review before production usage.
+- UPN rename/mail identity changes are intentionally excluded (higher-risk).
+#>
+
+[CmdletBinding(SupportsShouldProcess=$true, ConfirmImpact='Medium')]
+param(
+  [Parameter(Mandatory)]
+  [ValidateNotNullOrEmpty()]
+  [string]$UserPrincipalName,
+
+  # Profile fields (only applied if provided)
+  [Parameter()] [string]$DisplayName,
+  [Parameter()] [string]$GivenName,
+  [Parameter()] [string]$Surname,
+  [Parameter()] [string]$JobTitle,
+  [Parameter()] [string]$Department,
+  [Parameter()] [string]$OfficeLocation,
+  [Parameter()] [string]$MobilePhone,
+
+  # Often needed for licensing
+  [Parameter()]
+  [ValidatePattern('^[A-Z]{2}$')]
+  [string]$UsageLocation,
+
+  # Manager (optional). Requires Directory.ReadWrite.All in most tenants.
+  [Parameter()] [string]$ManagerUpn,
+
+  # Access changes
+  [Parameter()] [string[]]$AddGroupObjectIds    = @(),
+  [Parameter()] [string[]]$RemoveGroupObjectIds = @(),
+
+  # Safe execution
+  [Parameter()] [switch]$DryRun,
+
+  # Logging
+  [Parameter()] [string]$LogDirectory = "logs"
+)
+
+Set-StrictMode -Version Latest
+$ErrorActionPreference = 'Stop'
+
+function Ensure-Directory {
+  param([Parameter(Mandatory)][string]$Path)
+  if (-not (Test-Path -LiteralPath $Path)) {
+    New-Item -ItemType Directory -Path $Path | Out-Null
+  }
+}
+
+function Connect-GraphIfNeeded {
+  if (-not (Get-Module -ListAvailable -Name Microsoft.Graph)) {
+    throw "Microsoft.Graph PowerShell SDK not found. Install with: Install-Module Microsoft.Graph -Scope CurrentUser"
+  }
+
+  # Base scopes for profile + groups.
+  # Add Directory.ReadWrite.All only if ManagerUpn is used (principle of least privilege).
+  $scopes = @("User.ReadWrite.All", "Group.ReadWrite.All")
+  if ($PSBoundParameters.ContainsKey('ManagerUpn') -and -not [string]::IsNullOrWhiteSpace($ManagerUpn)) {
+    $scopes += "Directory.ReadWrite.All"
+  }
+
+  $ctx = Get-MgContext -ErrorAction SilentlyContinue
+  if (-not $ctx) {
+    Write-Host "Connecting to Microsoft Graph..." -ForegroundColor Cyan
+    Connect-MgGraph -Scopes $scopes | Out-Null
+  } else {
+    # If already connected, ensure required scopes are present (best-effort)
+    $missing = @()
+    foreach ($s in $scopes) {
+      if ($ctx.Scopes -notcontains $s) { $missing += $s }
+    }
+    if ($missing.Count -gt 0) {
+      Write-Host "Reconnecting to add missing scopes: $($missing -join ', ')" -ForegroundColor Yellow
+      Disconnect-MgGraph -ErrorAction SilentlyContinue | Out-Null
+      Connect-MgGraph -Scopes $scopes | Out-Null
+    }
+  }
+}
+
+function Get-UserByUpn {
+  param([Parameter(Mandatory)][string]$Upn)
+  try {
+    return Get-MgUser -UserId $Upn -ErrorAction Stop
+  } catch {
+    $escaped = $Upn.Replace("'", "''")
+    $result = Get-MgUser -Filter "userPrincipalName eq '$escaped'" -ConsistencyLevel eventual -CountVariable c -ErrorAction SilentlyContinue
+    return $result | Select-Object -First 1
+  }
+}
+
+function Build-UpdateBody {
+  # Only include fields explicitly provided (idempotent + non-destructive)
+  $body = @{}
+  $fields = @()
+
+  foreach ($k in @('DisplayName','GivenName','Surname','JobTitle','Department','OfficeLocation','MobilePhone','UsageLocation')) {
+    if ($PSBoundParameters.ContainsKey($k) -and -not [string]::IsNullOrWhiteSpace($PSBoundParameters[$k])) {
+      switch ($k) {
+        'DisplayName'    { $body.displayName    = $DisplayName }
+        'GivenName'      { $body.givenName      = $GivenName }
+        'Surname'        { $body.surname        = $Surname }
+        'JobTitle'       { $body.jobTitle       = $JobTitle }
+        'Department'     { $body.department     = $Department }
+        'OfficeLocation' { $body.officeLocation = $OfficeLocation }
+        'MobilePhone'    { $body.mobilePhone    = $MobilePhone }
+        'UsageLocation'  { $body.usageLocation  = $UsageLocation }
+      }
+      $fields += $k
+    }
+  }
+
+  return @{ Body = $body; Fields = $fields }
+}
+
+function Ensure-GroupChangeUnique {
+  param([string[]]$Ids)
+  return ($Ids | Where-Object { -not [string]::IsNullOrWhiteSpace($_) } | Select-Object -Unique)
+}
+
+# --- Begin main ---
+Ensure-Directory -Path $LogDirectory
+$timestamp = Get-Date -Format "yyyyMMdd-HHmmss"
+$transcriptPath = Join-Path $LogDirectory "change-$($UserPrincipalName.Replace('@','_'))-$timestamp.log"
+Start-Transcript -Path $transcriptPath -Append | Out-Null
+
+try {
+  Write-Host "---- M365 Change (Start) ----" -ForegroundColor Cyan
+  Write-Host "UPN: $UserPrincipalName"
+
+  if ($DryRun) {
+    Write-Host "[DryRun] No changes will be made." -ForegroundColor Yellow
+  } else {
+    Connect-GraphIfNeeded
+  }
+
+  $user = $null
+  if (-not $DryRun) {
+    $user = Get-UserByUpn -Upn $UserPrincipalName
+  }
+
+  if (-not $user -and -not $DryRun) {
+    throw "User not found: $UserPrincipalName"
+  }
+
+  $userId = if ($DryRun) { "DRYRUN-USER" } else { $user.Id }
+
+  # Profile update
+  $update = Build-UpdateBody
+  $profileUpdated = $false
+  $fieldsUpdated = @()
+
+  if ($update.Fields.Count -gt 0) {
+    $fieldsUpdated = $update.Fields
+    if ($PSCmdlet.ShouldProcess($UserPrincipalName, "Update profile fields: $($fieldsUpdated -join ', ')")) {
+      if ($DryRun) {
+        Write-Host "[DryRun] Would update user with body:" -ForegroundColor Yellow
+        $update.Body | ConvertTo-Json -Depth 6 | Write-Host
+        $profileUpdated = $true
+      } else {
+        Write-Host "Updating user profile..." -ForegroundColor Cyan
+        Update-MgUser -UserId $userId -BodyParameter $update.Body | Out-Null
+        $profileUpdated = $true
+        Write-Host "Profile updated." -ForegroundColor Green
+      }
+    }
+  } else {
+    Write-Host "No profile fields provided; skipping profile update." -ForegroundColor DarkGray
+  }
+
+  # Manager update (optional)
+  $managerUpdated = $false
+  if ($PSBoundParameters.ContainsKey('ManagerUpn') -and -not [string]::IsNullOrWhiteSpace($ManagerUpn)) {
+    if ($PSCmdlet.ShouldProcess($UserPrincipalName, "Set manager to $ManagerUpn")) {
+      if ($DryRun) {
+        Write-Host "[DryRun] Would set manager to: $ManagerUpn" -ForegroundColor Yellow
+        $managerUpdated = $true
+      } else {
+        $mgr = Get-UserByUpn -Upn $ManagerUpn
+        if (-not $mgr) { throw "Manager not found: $ManagerUpn" }
+
+        # Set manager reference
+        Set-MgUserManagerByRef -UserId $userId -BodyParameter @{
+          "@odata.id" = "https://graph.microsoft.com/v1.0/users/$($mgr.Id)"
+        } | Out-Null
+
+        Write-Host "Manager set to: $ManagerUpn" -ForegroundColor Green
+        $managerUpdated = $true
+      }
+    }
+  }
+
+  # Group adds/removes
+  $addIds    = Ensure-GroupChangeUnique -Ids $AddGroupObjectIds
+  $removeIds = Ensure-GroupChangeUnique -Ids $RemoveGroupObjectIds
+
+  $groupsAdded   = @()
+  $groupsRemoved = @()
+
+  foreach ($gid in $addIds) {
+    if ($PSCmdlet.ShouldProcess($UserPrincipalName, "Add to group $gid")) {
+      if ($DryRun) {
+        Write-Host "[DryRun] Would add user to group: $gid" -ForegroundColor Yellow
+        $groupsAdded += $gid
+      } else {
+        New-MgGroupMemberByRef -GroupId $gid -BodyParameter @{
+          "@odata.id" = "https://graph.microsoft.com/v1.0/directoryObjects/$userId"
+        } | Out-Null
+        Write-Host "Added to group: $gid" -ForegroundColor Green
+        $groupsAdded += $gid
+      }
+    }
+  }
+
+  foreach ($gid in $removeIds) {
+    if ($PSCmdlet.ShouldProcess($UserPrincipalName, "Remove from group $gid")) {
+      if ($DryRun) {
+        Write-Host "[DryRun] Would remove user from group: $gid" -ForegroundColor Yellow
+        $groupsRemoved += $gid
+      } else {
+        Remove-MgGroupMemberByRef -GroupId $gid -DirectoryObjectId $userId | Out-Null
+        Write-Host "Removed from group: $gid" -ForegroundColor Green
+        $groupsRemoved += $gid
+      }
+    }
+  }
+
+  $result = [pscustomobject]@{
+    UserPrincipalName = $UserPrincipalName
+    UserId            = $userId
+    ProfileUpdated    = $profileUpdated
+    FieldsUpdated     = $fieldsUpdated
+    GroupsAdded       = $groupsAdded
+    GroupsRemoved     = $groupsRemoved
+    ManagerUpdated    = $managerUpdated
+    DryRun            = [bool]$DryRun
+    TranscriptPath    = $transcriptPath
+    Timestamp         = (Get-Date).ToString("o")
+  }
+
+  Write-Host "---- Completed ----" -ForegroundColor Green
+  $result | Format-List | Out-String | Write-Host
+  $result
+}
+catch {
+  Write-Host "ERROR: $($_.Exception.Message)" -ForegroundColor Red
+  throw
+}
+finally {
+  Stop-Transcript | Out-Null
+}
