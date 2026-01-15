@@ -22,6 +22,10 @@ param(
   [ValidateNotNullOrEmpty()]
   [string]$UserPrincipalName,
 
+  # Optional: force explicit tenant when you have multiple accounts/tenants
+  [Parameter()]
+  [string]$TenantId,
+
   # Profile fields (only applied if provided)
   [Parameter()] [string]$DisplayName,
   [Parameter()] [string]$GivenName,
@@ -60,10 +64,14 @@ function Ensure-Directory {
   }
 }
 
-function Connect-GraphIfNeeded {
+function Ensure-GraphModule {
   if (-not (Get-Module -ListAvailable -Name Microsoft.Graph)) {
     throw "Microsoft.Graph PowerShell SDK not found. Install with: Install-Module Microsoft.Graph -Scope CurrentUser"
   }
+}
+
+function Connect-GraphIfNeeded {
+  Ensure-GraphModule
 
   # Base scopes for profile + groups.
   # Add Directory.ReadWrite.All only if ManagerUpn is used (principle of least privilege).
@@ -73,18 +81,36 @@ function Connect-GraphIfNeeded {
   }
 
   $ctx = Get-MgContext -ErrorAction SilentlyContinue
+
   if (-not $ctx) {
     Write-Host "Connecting to Microsoft Graph..." -ForegroundColor Cyan
-    Connect-MgGraph -Scopes $scopes | Out-Null
-  } else {
-    # If already connected, ensure required scopes are present (best-effort)
-    $missing = @()
-    foreach ($s in $scopes) {
-      if ($ctx.Scopes -notcontains $s) { $missing += $s }
+    if ($TenantId) {
+      Connect-MgGraph -TenantId $TenantId -Scopes $scopes | Out-Null
+    } else {
+      Connect-MgGraph -Scopes $scopes | Out-Null
     }
-    if ($missing.Count -gt 0) {
-      Write-Host "Reconnecting to add missing scopes: $($missing -join ', ')" -ForegroundColor Yellow
-      Disconnect-MgGraph -ErrorAction SilentlyContinue | Out-Null
+    return
+  }
+
+  # If a TenantId was provided and doesn't match, reconnect
+  if ($TenantId -and ($ctx.TenantId -ne $TenantId)) {
+    Write-Host "Graph context is for a different tenant. Reconnecting..." -ForegroundColor Yellow
+    Disconnect-MgGraph -ErrorAction SilentlyContinue | Out-Null
+    Connect-MgGraph -TenantId $TenantId -Scopes $scopes | Out-Null
+    return
+  }
+
+  # Ensure required scopes exist (best effort)
+  $missing = @()
+  foreach ($s in $scopes) {
+    if ($ctx.Scopes -notcontains $s) { $missing += $s }
+  }
+  if ($missing.Count -gt 0) {
+    Write-Host "Reconnecting to add missing scopes: $($missing -join ', ')" -ForegroundColor Yellow
+    Disconnect-MgGraph -ErrorAction SilentlyContinue | Out-Null
+    if ($TenantId) {
+      Connect-MgGraph -TenantId $TenantId -Scopes $scopes | Out-Null
+    } else {
       Connect-MgGraph -Scopes $scopes | Out-Null
     }
   }
@@ -102,7 +128,6 @@ function Get-UserByUpn {
 }
 
 function Build-UpdateBody {
-  # Only include fields explicitly provided (idempotent + non-destructive)
   $body = @{}
   $fields = @()
 
@@ -130,6 +155,45 @@ function Ensure-GroupChangeUnique {
   return ($Ids | Where-Object { -not [string]::IsNullOrWhiteSpace($_) } | Select-Object -Unique)
 }
 
+function Try-AddToGroup {
+  param(
+    [Parameter(Mandatory)][string]$UserId,
+    [Parameter(Mandatory)][string]$GroupId
+  )
+
+  try {
+    New-MgGroupMemberByRef -GroupId $GroupId -BodyParameter @{
+      "@odata.id" = "https://graph.microsoft.com/v1.0/directoryObjects/$UserId"
+    } | Out-Null
+    return "Added"
+  } catch {
+    $msg = $_.Exception.Message
+    if ($msg -match "added object references already exist") {
+      return "AlreadyMember"
+    }
+    throw
+  }
+}
+
+function Try-RemoveFromGroup {
+  param(
+    [Parameter(Mandatory)][string]$UserId,
+    [Parameter(Mandatory)][string]$GroupId
+  )
+
+  try {
+    Remove-MgGroupMemberByRef -GroupId $GroupId -DirectoryObjectId $UserId | Out-Null
+    return "Removed"
+  } catch {
+    # If not a member, treat as idempotent "NotMember"
+    $msg = $_.Exception.Message
+    if ($msg -match "Request_ResourceNotFound" -or $msg -match "does not exist" -or $msg -match "NotFound") {
+      return "NotMember"
+    }
+    throw
+  }
+}
+
 # --- Begin main ---
 Ensure-Directory -Path $LogDirectory
 $timestamp = Get-Date -Format "yyyyMMdd-HHmmss"
@@ -139,6 +203,7 @@ Start-Transcript -Path $transcriptPath -Append | Out-Null
 try {
   Write-Host "---- M365 Change (Start) ----" -ForegroundColor Cyan
   Write-Host "UPN: $UserPrincipalName"
+  if ($TenantId) { Write-Host "TenantId: $TenantId" }
 
   if ($DryRun) {
     Write-Host "[DryRun] No changes will be made." -ForegroundColor Yellow
@@ -149,10 +214,7 @@ try {
   $user = $null
   if (-not $DryRun) {
     $user = Get-UserByUpn -Upn $UserPrincipalName
-  }
-
-  if (-not $user -and -not $DryRun) {
-    throw "User not found: $UserPrincipalName"
+    if (-not $user) { throw "User not found: $UserPrincipalName" }
   }
 
   $userId = if ($DryRun) { "DRYRUN-USER" } else { $user.Id }
@@ -191,7 +253,6 @@ try {
         $mgr = Get-UserByUpn -Upn $ManagerUpn
         if (-not $mgr) { throw "Manager not found: $ManagerUpn" }
 
-        # Set manager reference
         Set-MgUserManagerByRef -UserId $userId -BodyParameter @{
           "@odata.id" = "https://graph.microsoft.com/v1.0/users/$($mgr.Id)"
         } | Out-Null
@@ -202,24 +263,22 @@ try {
     }
   }
 
-  # Group adds/removes
+  # Group adds/removes (idempotent outcomes)
   $addIds    = Ensure-GroupChangeUnique -Ids $AddGroupObjectIds
   $removeIds = Ensure-GroupChangeUnique -Ids $RemoveGroupObjectIds
 
-  $groupsAdded   = @()
-  $groupsRemoved = @()
+  $groupsAddedResults   = @()
+  $groupsRemovedResults = @()
 
   foreach ($gid in $addIds) {
     if ($PSCmdlet.ShouldProcess($UserPrincipalName, "Add to group $gid")) {
       if ($DryRun) {
         Write-Host "[DryRun] Would add user to group: $gid" -ForegroundColor Yellow
-        $groupsAdded += $gid
+        $groupsAddedResults += [pscustomobject]@{ GroupId=$gid; Result="WouldAdd" }
       } else {
-        New-MgGroupMemberByRef -GroupId $gid -BodyParameter @{
-          "@odata.id" = "https://graph.microsoft.com/v1.0/directoryObjects/$userId"
-        } | Out-Null
-        Write-Host "Added to group: $gid" -ForegroundColor Green
-        $groupsAdded += $gid
+        $r = Try-AddToGroup -UserId $userId -GroupId $gid
+        Write-Host "Add group $gid => $r" -ForegroundColor Green
+        $groupsAddedResults += [pscustomobject]@{ GroupId=$gid; Result=$r }
       }
     }
   }
@@ -228,11 +287,11 @@ try {
     if ($PSCmdlet.ShouldProcess($UserPrincipalName, "Remove from group $gid")) {
       if ($DryRun) {
         Write-Host "[DryRun] Would remove user from group: $gid" -ForegroundColor Yellow
-        $groupsRemoved += $gid
+        $groupsRemovedResults += [pscustomobject]@{ GroupId=$gid; Result="WouldRemove" }
       } else {
-        Remove-MgGroupMemberByRef -GroupId $gid -DirectoryObjectId $userId | Out-Null
-        Write-Host "Removed from group: $gid" -ForegroundColor Green
-        $groupsRemoved += $gid
+        $r = Try-RemoveFromGroup -UserId $userId -GroupId $gid
+        Write-Host "Remove group $gid => $r" -ForegroundColor Green
+        $groupsRemovedResults += [pscustomobject]@{ GroupId=$gid; Result=$r }
       }
     }
   }
@@ -242,8 +301,8 @@ try {
     UserId            = $userId
     ProfileUpdated    = $profileUpdated
     FieldsUpdated     = $fieldsUpdated
-    GroupsAdded       = $groupsAdded
-    GroupsRemoved     = $groupsRemoved
+    GroupsAddResults  = $groupsAddedResults
+    GroupsRemoveResults = $groupsRemovedResults
     ManagerUpdated    = $managerUpdated
     DryRun            = [bool]$DryRun
     TranscriptPath    = $transcriptPath
