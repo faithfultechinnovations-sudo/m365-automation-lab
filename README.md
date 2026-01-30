@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Microsoft 365 Automation Portfolio
 
 ## Overview
@@ -9,9 +10,32 @@ It reflects how I design, document, and operate **production‑safe identity wor
 - Microsoft Entra ID (Azure AD)
 
 The goal is to show *how I think as an administrator*: prioritizing safety, repeatability, and auditability over speed or convenience.
+=======
+Microsoft 365 Automation Portfolio
+Overview
 
----
+This repository demonstrates real‑world, enterprise‑grade Microsoft 365 administration through automation‑first practices — not one‑off scripts and not portal‑driven click paths.
 
+It reflects how I design, document, and operate production‑safe identity workflows using:
+
+PowerShell (PowerShell 7)
+
+Microsoft Graph API
+
+Microsoft Entra ID (Azure AD)
+
+The goal is to show how I think as an administrator: prioritizing safety, repeatability, and auditability over speed or convenience.
+
+Design Philosophy
+
+Automation first, portal last
+
+Least privilege over convenience
+>>>>>>> f1d9874ac2f50be8033349d66330ae7d01f218d8
+
+Idempotency over speed
+
+<<<<<<< HEAD
 ## Design Philosophy
 
 - **Automation first, portal last**
@@ -50,11 +74,118 @@ This is not a script dump — it is an **intentional automation lab**.
 - Human‑readable operational documentation
 - Clear boundaries, assumptions, and failure modes
 - Designed for team and handoff scenarios
+=======
+Groups as the control plane
 
----
+Logs over assumptions
 
-## Identity Lifecycle Model (Design Intent)
+Every script in this repository is written as if it will be:
 
+Re‑run
+
+Reviewed
+
+Audited
+
+Handed to another administrator
+
+This is not a script dump — it is an intentional automation lab.
+
+What’s Included
+User Onboarding
+
+New-M365User.ps1
+
+Idempotent user creation via Microsoft Graph
+
+Security‑first defaults
+
+Group‑based access and licensing
+
+Structured execution logging
+
+User Updates (Day‑2 Operations)
+
+Update-M365User.ps1
+
+Safe, scoped identity changes
+
+No destructive overwrites
+
+Optional group and access management
+
+Designed for ongoing identity maintenance
+
+Runbooks
+
+Human‑readable operational documentation
+
+Clear boundaries, assumptions, and failure modes
+
+Designed for team and handoff scenarios
+
+Identity Lifecycle Model (Design Intent)
+
+This repository models Microsoft 365 identity management as a deliberate lifecycle, not ad‑hoc automation.
+
+Each phase is isolated, auditable, and reversible where appropriate — mirroring how mature enterprises operate identity systems.
+
+Lifecycle Phases
+
+1. Onboarding – Phase 1 (Identity Creation)
+→ Create the Entra ID user object only
+→ No licenses, no mailbox assumptions
+→ Safe to re‑run (idempotent)
+
+2. Onboarding – Phase 2 (Access & Readiness)
+→ Assign licenses via group membership
+→ Prepare mailbox and service access
+→ Apply role and access groups
+
+3. Suspension (Non‑Destructive)
+→ Disable the user account
+→ Revoke active sign‑in sessions
+→ Preserve licenses and data
+
+4. Offboarding – Decommissioning
+→ Remove licenses
+→ Apply data protection and retention
+→ Prepare for deletion or archival
+
+5. Restore (Human Error Recovery)
+→ Re‑enable suspended accounts
+→ Restore access safely without rebuilding identity
+
+6. Change (Ongoing Maintenance)
+→ Name and profile updates
+→ Group and license adjustments
+→ Models real‑world identity drift
+
+Repository Structure
+m365-automation-portfolio/
+├─ .gitignore
+├─ LICENSE
+├─ README.md
+├─ scripts/
+│  ├─ onboarding/
+│  ├─ updates/
+├─ modules/
+├─ runbooks/
+└─ docs/
+What This Repository Is Not
+
+A bulk‑user import tool
+
+A licensing click‑replacement
+
+A “run everything as Global Admin” shortcut
+>>>>>>> f1d9874ac2f50be8033349d66330ae7d01f218d8
+
+A demo without guardrails
+
+Why This Matters
+
+<<<<<<< HEAD
 This repository models Microsoft 365 identity management as a **deliberate lifecycle**, not ad-hoc automation.
 
 Each phase is isolated, auditable, and reversible where appropriate — mirroring how mature enterprises and MSPs operate identity systems.
@@ -121,19 +252,20 @@ This lifecycle-first approach ensures:
 - Safer automation with rollback paths
 - Strong audit and compliance posture
 - Reduced blast radius from human error
+=======
+Most Microsoft 365 identity failures aren’t caused by lack of features —
+they’re caused by unclear process, unsafe defaults, and undocumented change.
 
-### Lifecycle Phases
+This repository demonstrates how I:
+>>>>>>> f1d9874ac2f50be8033349d66330ae7d01f218d8
 
-**1. Onboarding – Phase 1 (Identity Creation)**  
-→ Create the Entra ID user object only  
-→ No licenses, no mailbox assumptions  
-→ Safe to re-run (idempotent)
+Reduce risk before scale
 
-**2. Onboarding – Phase 2 (Access & Readiness)**  
-→ Assign licenses via group membership  
-→ Prepare mailbox and service access  
-→ Apply role and access groups
+Treat identity and security as code
 
+Design automation that survives audits and handoffs
+
+<<<<<<< HEAD
 **3. Suspension (Non-Destructive)**  
 → Disable the user account  
 → Revoke active sign-in sessions  
@@ -152,9 +284,19 @@ This lifecycle-first approach ensures:
 → Name and profile updates  
 → Group and license adjustments  
 → Models real-world identity drift
+=======
+Roadmap
 
----
+Automated offboarding workflows
 
+License drift detection
+
+Access review and reporting
+>>>>>>> f1d9874ac2f50be8033349d66330ae7d01f218d8
+
+Change and audit event correlation
+
+<<<<<<< HEAD
 ## How to Review This Repository (Hiring Managers)
 
 If you are reviewing this repository as part of an interview or technical evaluation, here is the recommended path:
@@ -244,3 +386,6 @@ This repository demonstrates how I:
 
 Successfully executed against a live Microsoft Entra ID tenant using delegated Microsoft Graph permissions.
 
+=======
+Successfully executed against a live Microsoft Entra ID tenant using delegated Microsoft Graph permissions.
+>>>>>>> f1d9874ac2f50be8033349d66330ae7d01f218d8
