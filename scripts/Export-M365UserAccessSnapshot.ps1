@@ -27,7 +27,7 @@ param(
     [string]$UserPrincipalName,
 
     [Parameter()]
-    [string]$OutputDirectory = "logs\snapshots",
+    [string]$OutputDirectory,
 
     [Parameter()]
     [switch]$IncludeCsv,
@@ -44,8 +44,19 @@ param(
     [switch]$DryRun,
 
     [Parameter()]
-    [string]$LogDirectory = "logs"
+    [string]$LogDirectory
 )
+
+# --- Repo-root logs (standard) ---
+# This script lives under: <repoRoot>\scripts\offboarding
+# Repo root is two levels up from $PSScriptRoot
+$repoRoot = Resolve-Path (Join-Path $PSScriptRoot "..\..") | Select-Object -ExpandProperty Path
+
+$logsRoot       = Join-Path $repoRoot "logs"
+$snapshotsDir   = Join-Path $logsRoot "snapshots"
+$transcriptsDir = Join-Path $logsRoot "transcripts"
+
+New-Item -ItemType Directory -Force -Path $logsRoot, $snapshotsDir, $transcriptsDir | Out-Null
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
@@ -97,24 +108,30 @@ function Safe-UpnForFilename {
     return ($Upn -replace '[^a-zA-Z0-9@._-]', '_').Replace('@','_')
 }
 
-# --- Begin ------------------------------------------------------
+# Resolve effective output dirs (repo-root defaults, allow override)
+$effectiveOutputDir = if ($OutputDirectory) { $OutputDirectory } else { $snapshotsDir }
+$effectiveLogDir    = if ($LogDirectory)   { $LogDirectory }   else { $transcriptsDir }
 
-Ensure-Directory $LogDirectory
-Ensure-Directory $OutputDirectory
+Ensure-Directory $effectiveOutputDir
+Ensure-Directory $effectiveLogDir
+
+# --- Begin ------------------------------------------------------
 
 $timestamp = Get-Date -Format "yyyyMMdd-HHmmss"
 $upnSafe = Safe-UpnForFilename $UserPrincipalName
 
-$transcriptPath = Join-Path $LogDirectory "snapshot-$upnSafe-$timestamp.log"
+$transcriptPath = Join-Path $effectiveLogDir "snapshot-$upnSafe-$timestamp.log"
 Start-Transcript -Path $transcriptPath | Out-Null
 
 try {
     Write-Host "---- Export M365 User Access Snapshot (Start) ----" -ForegroundColor Cyan
     Write-Host "User: $UserPrincipalName"
-    Write-Host "OutputDirectory: $OutputDirectory"
+    Write-Host "OutputDirectory: $effectiveOutputDir"
+	Write-Host "LogDirectory:    $effectiveLogDir"
+
     Write-Host "IncludeCsv: $IncludeCsv | IncludeManager: $IncludeManager | DryRun: $DryRun"
 
-    $jsonPath = Join-Path $OutputDirectory "access-snapshot-$upnSafe-$timestamp.json"
+    $jsonPath = Join-Path $effectiveOutputDir "access-snapshot-$upnSafe-$timestamp.json"
 
     if ($DryRun) {
         Write-Host "[DryRun] Would connect to Microsoft Graph and export snapshot to:" -ForegroundColor Yellow
@@ -267,9 +284,10 @@ try {
 
     $csvPaths = @{}
     if ($IncludeCsv) {
-        $groupsCsv   = Join-Path $OutputDirectory "access-snapshot-$upnSafe-$timestamp-groups.csv"
-        $rolesCsv    = Join-Path $OutputDirectory "access-snapshot-$upnSafe-$timestamp-roles.csv"
-        $licensesCsv = Join-Path $OutputDirectory "access-snapshot-$upnSafe-$timestamp-licenses.csv"
+        $groupsCsv   = Join-Path $effectiveOutputDir "access-snapshot-$upnSafe-$timestamp-groups.csv"
+	$rolesCsv    = Join-Path $effectiveOutputDir "access-snapshot-$upnSafe-$timestamp-roles.csv"
+	$licensesCsv = Join-Path $effectiveOutputDir "access-snapshot-$upnSafe-$timestamp-licenses.csv"
+
 
         if ($PSCmdlet.ShouldProcess($UserPrincipalName, "Write groups CSV to $groupsCsv")) {
             $groups | Export-Csv -Path $groupsCsv -NoTypeInformation -Encoding utf8
@@ -305,5 +323,5 @@ try {
     return $result
 }
 finally {
-    Stop-Transcript | Out-Null
+    try { Stop-Transcript | Out-Null } catch {}
 }
