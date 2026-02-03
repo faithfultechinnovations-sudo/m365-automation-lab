@@ -1,0 +1,31 @@
+﻿{
+    "SnapshotVersion":  "1.0",
+    "CapturedAtUtc":  "2026-02-01T00:33:56.2489931Z",
+    "Tenant":  {
+                   "TenantId":  "e25055f4-4c36-410c-b4df-309e138db2ed",
+                   "TenantName":  "faIThful tech innovations"
+               },
+    "User":  {
+                 "Id":  "2c2c1669-9fa9-45f7-983b-1639f3604fcf",
+                 "UserPrincipalName":  "jane.doe@faithfultechinnovations.onmicrosoft.com",
+                 "DisplayName":  "Jane Doe",
+                 "Mail":  null,
+                 "AccountEnabled":  null,
+                 "UserType":  null
+             },
+    "Manager":  null,
+    "Groups":  {
+
+               },
+    "Roles":  {
+
+              },
+    "Licenses":  {
+
+                 },
+    "Metadata":  {
+                     "IncludeManager":  false,
+                     "IncludeCsv":  false,
+                     "Script":  "Export-M365UserAccessSnapshot.ps1"
+                 }
+}

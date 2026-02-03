@@ -1,0 +1,55 @@
+﻿**********************
+Windows PowerShell transcript start
+Start time: 20260131183354
+Username: DESKTOP-1V5F1F4\Joe
+RunAs User: DESKTOP-1V5F1F4\Joe
+Configuration Name: 
+Machine: DESKTOP-1V5F1F4 (Microsoft Windows NT 10.0.26200.0)
+Host Application: C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe
+Process ID: 10316
+PSVersion: 5.1.26100.7705
+PSEdition: Desktop
+PSCompatibleVersions: 1.0, 2.0, 3.0, 4.0, 5.0, 5.1.26100.7705
+BuildVersion: 10.0.26100.7705
+CLRVersion: 4.0.30319.42000
+WSManStackVersion: 3.0
+PSRemotingProtocolVersion: 2.3
+SerializationVersion: 1.1.0.1
+**********************
+---- Export M365 User Access Snapshot (Start) ----
+User: jane.doe@faithfultechinnovations.onmicrosoft.com
+OutputDirectory: logs\snapshots
+IncludeCsv: False | IncludeManager: False | DryRun: False
+Wrote JSON: logs\snapshots\access-snapshot-jane.doe_faithfultechinnovations.onmicrosoft.com-20260131-183354.json
+---- Completed ----
+
+
+UserPrincipalName : jane.doe@faithfultechinnovations.onmicrosoft.com
+UserId            : 2c2c1669-9fa9-45f7-983b-1639f3604fcf
+TenantId          : e25055f4-4c36-410c-b4df-309e138db2ed
+GroupsCount       : 0
+RolesCount        : 0
+LicensesCount     : 0
+JsonPath          : logs\snapshots\access-snapshot-jane.doe_faithfultechinnovations.onmicrosoft.com-20260131-183354.jso
+                    n
+CsvPaths          : {}
+TranscriptPath    : logs\snapshot-jane.doe_faithfultechinnovations.onmicrosoft.com-20260131-183354.log
+Timestamp         : 2026-01-31T18:33:56.3005446-06:00
+
+
+UserPrincipalName : jane.doe@faithfultechinnovations.onmicrosoft.com
+UserId            : 2c2c1669-9fa9-45f7-983b-1639f3604fcf
+TenantId          : e25055f4-4c36-410c-b4df-309e138db2ed
+GroupsCount       : 0
+RolesCount        : 0
+LicensesCount     : 0
+JsonPath          : logs\snapshots\access-snapshot-jane.doe_faithfultechinnovations.onmicrosoft.com-20260131-183354.jso
+                    n
+CsvPaths          : {}
+TranscriptPath    : logs\snapshot-jane.doe_faithfultechinnovations.onmicrosoft.com-20260131-183354.log
+Timestamp         : 2026-01-31T18:33:56.3005446-06:00
+
+**********************
+Windows PowerShell transcript end
+End time: 20260131183356
+**********************

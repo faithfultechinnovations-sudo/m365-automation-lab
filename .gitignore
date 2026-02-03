@@ -11,9 +11,9 @@ secrets.json
 config.local.json
 
 # Logs & exports
-logs/
+
 exports/
-*.log
+
 *.csv
 *.zip
 
