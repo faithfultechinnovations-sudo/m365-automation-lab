@@ -12,7 +12,9 @@
     throw "Microsoft.Graph module not found. Install-Module Microsoft.Graph -Scope CurrentUser"
   }
 
-  Import-Module Microsoft.Graph -ErrorAction Stop
+  # Import only required Graph submodules (avoid PS5.1 function limit)
+Import-Module Microsoft.Graph.Authentication -ErrorAction Stop
+Import-Module Microsoft.Graph.Identity.DirectoryManagement -ErrorAction Stop
 
   $ctx = Get-MgContext -ErrorAction SilentlyContinue
   if (-not $ctx -or -not $ctx.TenantId) {

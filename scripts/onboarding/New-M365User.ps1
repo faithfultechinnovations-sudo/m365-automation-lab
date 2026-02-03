@@ -73,12 +73,11 @@ param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
-function Ensure-Directory {
-  param([Parameter(Mandatory)][string]$Path)
-  if (-not (Test-Path -LiteralPath $Path)) {
-    New-Item -ItemType Directory -Path $Path | Out-Null
-  }
-}
+# --- Common module import (repo-root relative) ---
+$repoRoot = (git rev-parse --show-toplevel 2>$null).Trim()
+if (-not $repoRoot) { throw "Run inside the git repo; unable to locate repo root." }
+
+Import-Module (Join-Path $repoRoot "modules/M365Automation.Common/M365Automation.Common.psm1")
 
 function New-StrongTempPassword {
   # Simple generator (lab use). In production, enforce your org policy.
@@ -86,6 +85,12 @@ function New-StrongTempPassword {
   $rand = New-Object System.Random
   -join (1..16 | ForEach-Object { $chars[$rand.Next(0, $chars.Length)] })
 }
+
+Confirm-TenantContext `
+  -ExpectedTenantDomain $env:M365_TENANT_DOMAIN `
+  -ExpectedTenantId $env:M365_TENANT_ID `
+  -ExpectedAccountSuffix $env:M365_ACCOUNT_SUFFIX `
+  -Scopes @("User.ReadWrite.All","Group.ReadWrite.All","Organization.Read.All")
 
 function Connect-GraphIfNeeded {
   if (-not (Get-Module -ListAvailable -Name Microsoft.Graph)) {
@@ -117,11 +122,15 @@ function Get-UserByUpn {
 }
 
 # --- Begin main ---
-Ensure-Directory -Path $LogDirectory
-$timestamp = Get-Date -Format "yyyyMMdd-HHmmss"
-$transcriptPath = Join-Path $LogDirectory "onboarding-$($UserPrincipalName.Replace('@','_'))-$timestamp.log"
 
-Start-Transcript -Path $transcriptPath -Append | Out-Null
+$runName = $UserPrincipalName.Replace("@","_")
+$transcriptPath = Start-RunTranscript -Area "onboarding" -RunName $runName
+
+Confirm-TenantContext `
+  -ExpectedTenantDomain $env:M365_TENANT_DOMAIN `
+  -ExpectedTenantId $env:M365_TENANT_ID `
+  -ExpectedAccountSuffix $env:M365_ACCOUNT_SUFFIX `
+  -Scopes @("User.ReadWrite.All","Group.ReadWrite.All","Organization.Read.All")
 
 try {
   if (-not $MailNickname -or [string]::IsNullOrWhiteSpace($MailNickname)) {
@@ -222,13 +231,38 @@ try {
   Write-Host "---- Completed ----" -ForegroundColor Green
   $result | Format-List | Out-String | Write-Host
 
+# --- Run summary (success) ---
+$summary = @{
+  area      = "onboarding"
+  upn       = $UserPrincipalName
+  userId    = $userId
+  groups    = $GroupObjectIds
+  outcome   = "success"
+  transcript= $transcriptPath
+  timestamp = (Get-Date).ToString("o")
+}
+Write-RunSummary -Area "onboarding" -RunName $RunName -Summary $summary | Out-Null
+
   # Return to pipeline
   $result
 }
 catch {
+  $summary = @{
+    area      = "onboarding"
+    upn       = $UserPrincipalName
+    userId    = $userId
+    groups    = $GroupObjectIds
+    outcome   = "failed"
+    error     = $_.Exception.Message
+    transcript= $transcriptPath
+    timestamp = (Get-Date).ToString("o")
+  }
+
+  Write-RunSummary -Area "onboarding" -RunName $runName -Summary $summary | Out-Null
   Write-Host "ERROR: $($_.Exception.Message)" -ForegroundColor Red
   throw
 }
+
 finally {
-  Stop-Transcript | Out-Null
+  Stop-RunTranscript | Out-Null
 }
