@@ -23,3 +23,9 @@ exports/
 # OS files
 .DS_Store
 Thumbs.db
+
+# Local backup folder
+_local_backup/
+
+# Logs are local only
+logs/
