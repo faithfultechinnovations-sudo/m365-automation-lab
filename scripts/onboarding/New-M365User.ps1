@@ -77,7 +77,14 @@ $ErrorActionPreference = 'Stop'
 $repoRoot = (git rev-parse --show-toplevel 2>$null).Trim()
 if (-not $repoRoot) { throw "Run inside the git repo; unable to locate repo root." }
 
-Import-Module (Join-Path $repoRoot "modules/M365Automation.Common/M365Automation.Common.psm1")
+# Suppress unapproved-verb warnings for internal helper module
+Import-Module (
+  Join-Path $repoRoot "modules/M365Automation.Common/M365Automation.Common.psm1"
+) -Force -DisableNameChecking
+
+Import-Module (
+  Join-Path $repoRoot "modules/M365Automation.Common/M365Automation.Common.psm1"
+) -Force -DisableNameChecking
 
 function New-StrongTempPassword {
   # Simple generator (lab use). In production, enforce your org policy.
@@ -85,12 +92,6 @@ function New-StrongTempPassword {
   $rand = New-Object System.Random
   -join (1..16 | ForEach-Object { $chars[$rand.Next(0, $chars.Length)] })
 }
-
-Confirm-TenantContext `
-  -ExpectedTenantDomain $env:M365_TENANT_DOMAIN `
-  -ExpectedTenantId $env:M365_TENANT_ID `
-  -ExpectedAccountSuffix $env:M365_ACCOUNT_SUFFIX `
-  -Scopes @("User.ReadWrite.All","Group.ReadWrite.All","Organization.Read.All")
 
 function Connect-GraphIfNeeded {
   if (-not (Get-Module -ListAvailable -Name Microsoft.Graph)) {
@@ -136,7 +137,7 @@ try {
   if (-not $MailNickname -or [string]::IsNullOrWhiteSpace($MailNickname)) {
     $MailNickname = ($UserPrincipalName.Split('@')[0]) -replace '[^a-zA-Z0-9._-]', ''
   }
-
+  
   if (-not $TempPassword -or [string]::IsNullOrWhiteSpace($TempPassword)) {
     $TempPassword = New-StrongTempPassword
   }
@@ -180,18 +181,26 @@ try {
     }
 
     if ($PSCmdlet.ShouldProcess($UserPrincipalName, "Create Entra ID user")) {
-      if ($DryRun) {
-        Write-Host "[DryRun] Would create user with body:" -ForegroundColor Yellow
-        $createBody | ConvertTo-Json -Depth 6 | Write-Host
-        $userId = "DRYRUN-USER"
-      } else {
-        Write-Host "Creating user in Entra ID..." -ForegroundColor Cyan
-        $newUser = New-MgUser -BodyParameter $createBody
-        $userId = $newUser.Id
-        Write-Host "Created user: $userId" -ForegroundColor Green
-      }
-    }
+
+  if ($DryRun) {
+    Write-Host "[DryRun] Would create user with body:" -ForegroundColor Yellow
+
+    $safeBody = $createBody.Clone()
+    $safeBody.passwordProfile = $safeBody.passwordProfile.Clone()
+    $safeBody.passwordProfile.password = "***redacted***"
+
+    $safeBody | ConvertTo-Json -Depth 6 | Write-Host
+    $userId = "DRYRUN-USER"
   }
+  else {
+    Write-Host "Creating user in Entra ID..." -ForegroundColor Cyan
+    $newUser = New-MgUser -BodyParameter $createBody
+    $userId = $newUser.Id
+    Write-Host "Created user: $userId" -ForegroundColor Green
+  }
+
+}
+
 
   # Group membership (preferred: group-based licensing)
   foreach ($gid in $GroupObjectIds) {
@@ -245,6 +254,7 @@ Write-RunSummary -Area "onboarding" -RunName $RunName -Summary $summary | Out-Nu
 
   # Return to pipeline
   $result
+}
 }
 catch {
   $summary = @{
