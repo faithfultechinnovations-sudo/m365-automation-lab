@@ -1,0 +1,19 @@
+name: PowerShell Static Validation
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  powershell-parse:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install PowerShell
+        uses: PowerShell/PowerShell@v1
+
+      - name: Parse all PowerShell scripts
+        run: pwsh -NoProfile -File ./scripts/parse-only.ps1
